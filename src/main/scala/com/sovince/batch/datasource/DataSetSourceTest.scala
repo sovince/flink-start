@@ -2,6 +2,7 @@ package com.sovince.batch.datasource
 
 import com.sovince.pojo.StuPojo
 import org.apache.flink.api.scala._
+import org.apache.flink.configuration.Configuration
 import org.junit.Test
 
 /**
@@ -42,8 +43,18 @@ object DataSetSourceTest {
       .print()
   }
 
+  def recursiveRead(): Unit ={
+    //递归读取
+    //https://ci.apache.org/projects/flink/flink-docs-release-1.8/dev/batch/#data-sources
+    val conf = new Configuration()
+    conf.setBoolean("recursive.file.enumeration", true)
+    env.readTextFile("input/datasource/recursive")
+      .withParameters(conf)
+      .print()
+  }
+
   def main(args: Array[String]): Unit = {
-    readCsvToPojo()
+    recursiveRead()
   }
 
 
