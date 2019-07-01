@@ -53,6 +53,7 @@ under the License.
         <scala.binary.version>2.11</scala.binary.version>
         <scala.version>2.11.8</scala.version>
         <hadoop.version>2.6.0-cdh5.15.2</hadoop.version>
+        <!--<elk.version>6.8.1</elk.version>-->
     </properties>
 
     <dependencies>
@@ -84,17 +85,15 @@ under the License.
             <version>${flink.version}</version>
         </dependency>
 
-        <!--hadoop-->
+
+        <!--elasticsearch-->
+        <!--httpclient 和hadoop 中的冲突  要先声明-->
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-filesystem_2.11</artifactId>
+            <artifactId>flink-connector-elasticsearch6_2.11</artifactId>
             <version>${flink.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-client</artifactId>
-            <version>${hadoop.version}</version>
-        </dependency>
+
 
         <!--kafka-->
         <dependency>
@@ -109,13 +108,29 @@ under the License.
         </dependency>
 
 
-
         <!-- Scala Library, provided by Flink as well. -->
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
             <version>${scala.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <!--hadoop-->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-connector-filesystem_2.11</artifactId>
+            <version>${flink.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+            <version>${hadoop.version}</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>jackson-core</artifactId>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Add connector dependencies here. They must be in the default scope (compile). -->
