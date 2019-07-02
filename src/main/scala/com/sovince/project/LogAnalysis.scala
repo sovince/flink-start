@@ -1,6 +1,7 @@
 package com.sovince.project
 
 import java.text.SimpleDateFormat
+import java.util
 import java.util.Properties
 
 import org.apache.flink.api.common.functions.RuntimeContext
@@ -8,6 +9,7 @@ import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.api.java.tuple.Tuple
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks
+import org.apache.flink.streaming.api.functions.co.CoFlatMapFunction
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.api.scala.function.WindowFunction
 import org.apache.flink.streaming.api.watermark.Watermark
@@ -127,16 +129,36 @@ object LogAnalysis {
             .id(id)
             .source(json)
         }
+
         override def process(t: (String, String, Long), runtimeContext: RuntimeContext, requestIndexer: RequestIndexer): Unit = {
           requestIndexer.add(createIndexRequest(t))
         }
       }
     )
-    esSinkBuilder.setBulkFlushMaxActions(1)//设置不批量
+    esSinkBuilder.setBulkFlushMaxActions(1) //设置不批量
 
     //最终添加构建好的esSink
-    logWindowed.addSink(esSinkBuilder.build())
-    //
+    //    logWindowed.addSink(esSinkBuilder.build())
+
+    //logWindowed和mysql数据关联
+    val domainUserMysql = env.addSource(new DomainUserMysqlSource)
+    logWindowed.connect(domainUserMysql).flatMap(new CoFlatMapFunction[(String, String, Long), util.HashMap[String, String], String] {
+      var domainUserMap = new util.HashMap[String, String]
+
+      override def flatMap1(value: (String, String, Long), out: Collector[String]): Unit = {
+        val time = value._1
+        val domain = value._2
+        val traffic = value._3
+        val user = domainUserMap.getOrDefault(domain, "none")
+        out.collect(s"batchTime:$time,domain:$domain,traffic:$traffic,user:$user")
+      }
+
+      override def flatMap2(value: util.HashMap[String, String], out: Collector[String]): Unit = {
+        domainUserMap = value
+      }
+    })
+      .print()
+
     env.execute("LogAnalysis")
   }
 
