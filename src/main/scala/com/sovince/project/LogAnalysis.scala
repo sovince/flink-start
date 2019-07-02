@@ -138,7 +138,7 @@ object LogAnalysis {
     esSinkBuilder.setBulkFlushMaxActions(1) //设置不批量
 
     //最终添加构建好的esSink
-    //    logWindowed.addSink(esSinkBuilder.build())
+    logWindowed.addSink(esSinkBuilder.build())
 
     //logWindowed和mysql数据关联
     val domainUserMysql = env.addSource(new DomainUserMysqlSource)
